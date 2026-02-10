@@ -2,13 +2,18 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getList, type ShoppingList } from '@/lib/db';
 import { useLists } from '@/hooks/useLists';
+import { type User } from '@/lib/auth';
 import ListItemRow from '@/components/ListItemRow';
 import AddItemInput from '@/components/AddItemInput';
 import GlassCard from '@/components/GlassCard';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export default function ListView() {
+interface ListViewProps {
+  user: User;
+}
+
+export default function ListView({ user }: ListViewProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem, toggleItem, removeItem, removeList, lists } = useLists();
@@ -32,7 +37,6 @@ export default function ListView() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="glass-strong sticky top-0 z-10 px-4 pt-safe">
         <div className="flex items-center justify-between h-14 max-w-lg mx-auto">
           <button onClick={() => navigate('/')} className="touch-target flex items-center justify-center">
@@ -51,10 +55,8 @@ export default function ListView() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pb-8 pt-4 space-y-4">
-        {/* Add item */}
-        <AddItemInput onAdd={(text) => addItem(list.id, text)} />
+        <AddItemInput onAdd={(text) => addItem(list.id, text, user.name)} />
 
-        {/* Pending items */}
         {pending.length > 0 && (
           <GlassCard className="p-4">
             <AnimatePresence>
@@ -62,7 +64,7 @@ export default function ListView() {
                 <ListItemRow
                   key={item.id}
                   item={item}
-                  onToggle={() => toggleItem(list.id, item.id)}
+                  onToggle={() => toggleItem(list.id, item.id, user.name)}
                   onRemove={() => removeItem(list.id, item.id)}
                 />
               ))}
@@ -70,7 +72,6 @@ export default function ListView() {
           </GlassCard>
         )}
 
-        {/* Completed */}
         {completed.length > 0 && (
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-2 px-1">
@@ -82,7 +83,7 @@ export default function ListView() {
                   <ListItemRow
                     key={item.id}
                     item={item}
-                    onToggle={() => toggleItem(list.id, item.id)}
+                    onToggle={() => toggleItem(list.id, item.id, user.name)}
                     onRemove={() => removeItem(list.id, item.id)}
                   />
                 ))}
@@ -92,11 +93,7 @@ export default function ListView() {
         )}
 
         {list.items.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
             <p className="text-5xl mb-3">📝</p>
             <p className="text-muted-foreground">Agrega tu primer elemento</p>
           </motion.div>
