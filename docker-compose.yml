@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: listas-compartidas
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    environment:
+      - PORT=${PORT:-3000}
+    volumes:
+      - app-data:/app/data
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  app-data:
+    driver: local
