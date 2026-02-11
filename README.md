@@ -1,73 +1,200 @@
-# Welcome to your Lovable project
+# Shared Lists
 
-## Project info
+A collaborative list management application built with React, TypeScript, and Vite. Create, share, and manage lists with your team or groups.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## ✨ Features
 
-## How can I edit this code?
+- 🔐 **User Authentication** - Secure login system with user roles
+- 📝 **List Management** - Create, edit, and organize your lists
+- 👥 **Group Collaboration** - Share lists with groups and collaborate in real-time
+- 🎨 **Modern UI** - Built with shadcn/ui and Tailwind CSS for a beautiful, responsive interface
+- 🌙 **Theme Support** - System-aware dark/light mode
+- 🔑 **Role-Based Access** - Admin features for user management
+- 🧪 **Tested** - Comprehensive test coverage with Vitest
+- 🐳 **Docker Ready** - Containerized deployment with Docker Compose
 
-There are several ways of editing your application.
+## 🚀 Tech Stack
 
-**Use Lovable**
+- **Frontend Framework:** React 18.3
+- **Language:** TypeScript 5.8
+- **Build Tool:** Vite 5.4
+- **Styling:** Tailwind CSS 3.4
+- **UI Components:** shadcn/ui with Radix UI primitives
+- **Routing:** React Router DOM 6.30
+- **State Management:** TanStack Query (React Query) 5.83
+- **Form Handling:** React Hook Form 7.61 + Zod validation
+- **Animations:** Framer Motion 12.34
+- **Testing:** Vitest 3.2 + Testing Library
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 📋 Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js (v18 or higher recommended)
+- npm, pnpm, or bun
+- Docker & Docker Compose (optional, for containerized deployment)
 
-**Use your preferred IDE**
+## 🛠️ Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/xXDatiXx/shared-lists.git
+   cd shared-lists
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   bun install
+   ```
 
-Follow these steps:
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   # or
+   bun dev
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. **Open your browser:**
+   Navigate to `http://localhost:5173`
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🐳 Docker Deployment
 
-# Step 3: Install the necessary dependencies.
-npm i
+Build and run with Docker Compose:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+docker-compose up -d
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at the port specified in your docker-compose.yml.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📜 Available Scripts
 
-**Use GitHub Codespaces**
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run build:dev` | Build in development mode |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Lint code with ESLint |
+| `npm run test` | Run tests once |
+| `npm run test:watch` | Run tests in watch mode |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🗂️ Project Structure
 
-## What technologies are used for this project?
+```
+shared-lists/
+├── src/
+│   ├── components/    # Reusable UI components
+│   ├── hooks/         # Custom React hooks
+│   ├── lib/           # Utility functions and libraries
+│   ├── pages/         # Page components
+│   │   ├── Index.tsx        # Home page
+│   │   ├── ListView.tsx     # Individual list view
+│   │   ├── LoginPage.tsx    # Authentication page
+│   │   ├── AdminPage.tsx    # Admin dashboard
+│   │   ├── GroupsPage.tsx   # Groups management
+│   │   └── NotFound.tsx     # 404 page
+│   ├── test/          # Test files
+│   ├── App.tsx        # Main application component
+│   ├── main.tsx       # Application entry point
+│   └── index.css      # Global styles
+├── public/            # Static assets
+├── Dockerfile         # Docker configuration
+├── docker-compose.yml # Docker Compose setup
+└── vite.config.ts     # Vite configuration
+```
 
-This project is built with:
+## 🎯 Key Features Breakdown
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Authentication System
+- User login and session management
+- Role-based access control (User/Admin)
+- Protected routes
 
-## How can I deploy this project?
+### List Management
+- Create and manage multiple lists
+- Individual list views with detailed editing
+- Real-time updates
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Groups
+- Create and manage user groups
+- Share lists with groups
+- Collaborative list editing
 
-## Can I connect a custom domain to my Lovable project?
+### Admin Panel
+- User management
+- System administration tools
+- Access control configuration
 
-Yes, you can!
+## 🎨 UI Components
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+The project uses shadcn/ui components including:
+- Accordions, Alerts, Avatars
+- Buttons, Cards, Checkboxes
+- Dialogs, Dropdowns, Forms
+- Navigation menus, Tabs, Tooltips
+- And many more...
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🔧 Configuration
+
+### Tailwind CSS
+Custom configuration available in `tailwind.config.ts` with:
+- Custom color schemes
+- Typography plugin
+- Animation utilities
+
+### TypeScript
+Strict TypeScript configuration for type safety across the application.
+
+### Vite
+Optimized build configuration with React SWC plugin for fast refresh.
+
+## 🧪 Testing
+
+Run the test suite:
+
+```bash
+# Run all tests
+npm run test
+
+# Watch mode for development
+npm run test:watch
+```
+
+Tests are written using Vitest and React Testing Library.
+
+## 📦 Building for Production
+
+Create an optimized production build:
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory, ready for deployment.
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is open source and available under the MIT License.
+
+## 👤 Author
+
+**xXDatiXx**
+- GitHub: [@xXDatiXx](https://github.com/xXDatiXx)
+
+## 🙏 Acknowledgments
+
+- Built with [Vite](https://vitejs.dev/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- Icons from [Lucide](https://lucide.dev/)
+- Powered by [React](https://react.dev/)
