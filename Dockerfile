@@ -8,8 +8,8 @@ RUN npm ci --only=production=false
 COPY . .
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine AS production
+# Production stage with nginx
+FROM nginx:alpine
 
 WORKDIR /app
 
