@@ -16,14 +16,21 @@ function getSystemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+function getStoredTheme(): Theme {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === 'light' || stored === 'dark' || stored === 'system') {
+    return stored;
+  }
+  return 'system';
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return (stored as Theme) || 'system';
+    return getStoredTheme();
   });
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = getStoredTheme();
     if (stored === 'light' || stored === 'dark') return stored;
     return getSystemTheme();
   });
