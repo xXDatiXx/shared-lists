@@ -3,22 +3,24 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production=false
+RUN npm install
 
 COPY . .
 RUN npm run build
 
-# Production stage with nginx
-FROM nginx:alpine
+# Production stage
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
+# Install serve globally
 RUN npm install -g serve
 
+# Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
-ENV PORT=3000
+# Expose port
+EXPOSE 3000
 
-EXPOSE ${PORT}
-
-CMD ["sh", "-c", "serve -s dist -p ${PORT} -n"]
+# Serve the app with proper SPA configuration
+CMD ["serve", "-s", "dist", "-l", "3000", "--no-clipboard"]
