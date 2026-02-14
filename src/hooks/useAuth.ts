@@ -12,28 +12,38 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check URL for token param
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (token) {
-      const found = loginWithToken(token);
-      if (found) {
-        setUser(found);
-        // Clean URL
-        window.history.replaceState({}, '', window.location.pathname);
+    async function initialize() {
+      try {
+        // Check URL for token param
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        
+        if (token) {
+          const found = await loginWithToken(token);
+          if (found) {
+            setUser(found);
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        } else {
+          const stored = getCurrentUser();
+          setUser(stored);
+        }
+
+        // Ensure admin exists
+        await initializeAdmin();
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      const stored = getCurrentUser();
-      setUser(stored);
     }
 
-    // Ensure admin exists
-    initializeAdmin();
-    setLoading(false);
+    initialize();
   }, []);
 
-  const login = useCallback((token: string): boolean => {
-    const found = loginWithToken(token);
+  const login = useCallback(async (token: string): Promise<boolean> => {
+    const found = await loginWithToken(token);
     if (found) {
       setUser(found);
       return true;
