@@ -6,6 +6,7 @@ import { type User } from '@/lib/auth';
 import ListItemRow from '@/components/ListItemRow';
 import AddItemInput from '@/components/AddItemInput';
 import GlassCard from '@/components/GlassCard';
+import CollaboratorManager from '@/components/CollaboratorManager';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -55,6 +56,15 @@ export default function ListView({ user }: ListViewProps) {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pb-8 pt-4 space-y-4">
+        {/* Collaborator Manager */}
+        <div className="flex justify-end">
+          <CollaboratorManager 
+            listId={list.id} 
+            creatorId={list.creatorId}
+            currentUserId={user.id}
+          />
+        </div>
+
         <AddItemInput onAdd={(text) => addItem(list.id, text, user.name)} />
 
         {pending.length > 0 && (
