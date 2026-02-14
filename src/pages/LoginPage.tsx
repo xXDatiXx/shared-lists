@@ -77,10 +77,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </GlassCard>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Usa el token <code className="bg-secondary px-1.5 py-0.5 rounded">admin-setup-token</code> para el primer acceso
-        </p>
+        
       </motion.div>
     </div>
   );
