@@ -4,12 +4,18 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all lists with their items
+// Get all lists with their items (filtered by ownership/collaboration)
 router.get('/', authenticateToken, (req, res) => {
   try {
+    const userId = req.user.id;
+    
+    // Get lists where user is creator or collaborator
     const lists = db.prepare(`
-      SELECT * FROM lists ORDER BY updatedAt DESC
-    `).all();
+      SELECT DISTINCT l.* FROM lists l
+      LEFT JOIN list_collaborators lc ON l.id = lc.listId
+      WHERE l.creatorId = ? OR lc.userId = ?
+      ORDER BY l.updatedAt DESC
+    `).all(userId, userId);
 
     // Get items for each list
     const listsWithItems = lists.map(list => {
@@ -33,14 +39,24 @@ router.get('/', authenticateToken, (req, res) => {
   }
 });
 
-// Get single list by ID
+// Get single list by ID (check permissions)
 router.get('/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
+    
     const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
 
     if (!list) {
       return res.status(404).json({ error: 'List not found' });
+    }
+
+    // Check if user has permission to view this list
+    const hasPermission = list.creatorId === userId || 
+      db.prepare('SELECT 1 FROM list_collaborators WHERE listId = ? AND userId = ?').get(id, userId);
+
+    if (!hasPermission) {
+      return res.status(403).json({ error: 'You do not have permission to view this list' });
     }
 
     const items = db.prepare(`
@@ -64,6 +80,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 router.post('/', authenticateToken, (req, res) => {
   try {
     const { name, emoji, color } = req.body;
+    const creatorId = req.user.id;
 
     if (!name || !emoji || !color) {
       return res.status(400).json({ error: 'Name, emoji, and color are required' });
@@ -73,9 +90,9 @@ router.post('/', authenticateToken, (req, res) => {
     const now = Date.now();
 
     db.prepare(`
-      INSERT INTO lists (id, name, emoji, color, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(id, name, emoji, color, now, now);
+      INSERT INTO lists (id, name, emoji, color, createdAt, updatedAt, creatorId)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, name, emoji, color, now, now, creatorId);
 
     const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
     
@@ -277,6 +294,125 @@ router.delete('/:listId/items/:itemId', authenticateToken, (req, res) => {
   } catch (error) {
     console.error('Delete item error:', error);
     res.status(500).json({ error: 'Failed to delete item' });
+  }
+});
+
+// Get collaborators for a list
+router.get('/:id/collaborators', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    
+    // Check if list exists and user has permission
+    const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
+    if (!list) {
+      return res.status(404).json({ error: 'List not found' });
+    }
+
+    const hasPermission = list.creatorId === userId || 
+      db.prepare('SELECT 1 FROM list_collaborators WHERE listId = ? AND userId = ?').get(id, userId);
+
+    if (!hasPermission) {
+      return res.status(403).json({ error: 'You do not have permission to view collaborators' });
+    }
+
+    // Get all collaborators with user details
+    const collaborators = db.prepare(`
+      SELECT u.id, u.name, u.avatar, lc.addedAt
+      FROM list_collaborators lc
+      JOIN users u ON lc.userId = u.id
+      WHERE lc.listId = ?
+      ORDER BY lc.addedAt ASC
+    `).all(id);
+
+    res.json(collaborators);
+  } catch (error) {
+    console.error('Get collaborators error:', error);
+    res.status(500).json({ error: 'Failed to get collaborators' });
+  }
+});
+
+// Add collaborator to list (creator only)
+router.post('/:id/collaborators', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    const requestUserId = req.user.id;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Check if list exists
+    const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
+    if (!list) {
+      return res.status(404).json({ error: 'List not found' });
+    }
+
+    // Only creator can add collaborators
+    if (list.creatorId !== requestUserId) {
+      return res.status(403).json({ error: 'Only the list creator can add collaborators' });
+    }
+
+    // Check if user exists
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is already a collaborator
+    const existing = db.prepare('SELECT 1 FROM list_collaborators WHERE listId = ? AND userId = ?').get(id, userId);
+    if (existing) {
+      return res.status(400).json({ error: 'User is already a collaborator' });
+    }
+
+    // Add collaborator
+    const collaboratorId = generateId();
+    const now = Date.now();
+    db.prepare(`
+      INSERT INTO list_collaborators (id, listId, userId, addedAt)
+      VALUES (?, ?, ?, ?)
+    `).run(collaboratorId, id, userId, now);
+
+    res.status(201).json({
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      addedAt: now
+    });
+  } catch (error) {
+    console.error('Add collaborator error:', error);
+    res.status(500).json({ error: 'Failed to add collaborator' });
+  }
+});
+
+// Remove collaborator from list (creator only)
+router.delete('/:id/collaborators/:userId', authenticateToken, (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const requestUserId = req.user.id;
+
+    // Check if list exists
+    const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
+    if (!list) {
+      return res.status(404).json({ error: 'List not found' });
+    }
+
+    // Only creator can remove collaborators
+    if (list.creatorId !== requestUserId) {
+      return res.status(403).json({ error: 'Only the list creator can remove collaborators' });
+    }
+
+    const result = db.prepare('DELETE FROM list_collaborators WHERE listId = ? AND userId = ?').run(id, userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Collaborator not found' });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Remove collaborator error:', error);
+    res.status(500).json({ error: 'Failed to remove collaborator' });
   }
 });
 

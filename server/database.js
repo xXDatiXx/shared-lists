@@ -36,7 +36,8 @@ function initializeDatabase() {
       emoji TEXT NOT NULL,
       color TEXT NOT NULL,
       createdAt INTEGER NOT NULL,
-      updatedAt INTEGER NOT NULL
+      updatedAt INTEGER NOT NULL,
+      creatorId TEXT
     );
 
     CREATE TABLE IF NOT EXISTS items (
@@ -77,11 +78,23 @@ function initializeDatabase() {
       FOREIGN KEY (listId) REFERENCES lists(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS list_collaborators (
+      id TEXT PRIMARY KEY,
+      listId TEXT NOT NULL,
+      userId TEXT NOT NULL,
+      addedAt INTEGER NOT NULL,
+      FOREIGN KEY (listId) REFERENCES lists(id) ON DELETE CASCADE,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(listId, userId)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_items_listId ON items(listId);
     CREATE INDEX IF NOT EXISTS idx_group_members_groupId ON group_members(groupId);
     CREATE INDEX IF NOT EXISTS idx_group_members_userId ON group_members(userId);
     CREATE INDEX IF NOT EXISTS idx_group_lists_groupId ON group_lists(groupId);
     CREATE INDEX IF NOT EXISTS idx_group_lists_listId ON group_lists(listId);
+    CREATE INDEX IF NOT EXISTS idx_list_collaborators_listId ON list_collaborators(listId);
+    CREATE INDEX IF NOT EXISTS idx_list_collaborators_userId ON list_collaborators(userId);
   `);
 
   console.log('Database initialized successfully');

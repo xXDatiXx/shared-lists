@@ -4,6 +4,13 @@ import type { User } from './auth';
 import type { ShoppingList, ListItem } from './db';
 import type { Group } from './groups';
 
+export interface Collaborator {
+  id: string;
+  name: string;
+  avatar: string;
+  addedAt: number;
+}
+
 const getApiUrl = () => {
   // If VITE_API_URL is set, use it (development)
   if (import.meta.env.VITE_API_URL) {
@@ -253,6 +260,34 @@ export async function addListToGroup(groupId: string, listId: string): Promise<{
   });
   
   return handleResponse<{ groupId: string; listId: string }>(response);
+}
+
+// Collaborators API
+export async function getCollaborators(listId: string): Promise<Collaborator[]> {
+  const response = await fetch(`${API_URL}/lists/${listId}/collaborators`, {
+    headers: getHeaders(),
+  });
+  
+  return handleResponse<Collaborator[]>(response);
+}
+
+export async function addCollaborator(listId: string, userId: string): Promise<Collaborator> {
+  const response = await fetch(`${API_URL}/lists/${listId}/collaborators`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ userId }),
+  });
+  
+  return handleResponse<Collaborator>(response);
+}
+
+export async function removeCollaborator(listId: string, userId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/lists/${listId}/collaborators/${userId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  
+  return handleResponse<void>(response);
 }
 
 export async function removeListFromGroup(groupId: string, listId: string): Promise<void> {

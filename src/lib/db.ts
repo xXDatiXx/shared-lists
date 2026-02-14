@@ -18,6 +18,7 @@ export interface ShoppingList {
   items: ListItem[];
   createdAt: number;
   updatedAt: number;
+  creatorId?: string;
 }
 
 export async function getAllLists(): Promise<ShoppingList[]> {
