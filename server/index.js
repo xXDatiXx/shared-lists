@@ -15,10 +15,10 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 
-// Rate limiter específico para consultas de listas individuales
+// Rate limiter specific for individual list queries
 const listGetLimiter = rateLimit({
-  windowMs: 1000, // 1 segundo
-  max: 10, // máximo 10 requests por segundo
+  windowMs: 1000, // 1 second
+  max: 10, // maximum 10 requests per second
   message: { error: 'Demasiadas peticiones, por favor espera' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Aplicar rate limiting específico a GET de listas individuales
+// Apply specific rate limiting to GET requests for individual lists
 app.use('/api/lists/:id', (req, res, next) => {
   if (req.method === 'GET' && req.params.id && !req.path.includes('/items') && !req.path.includes('/share')) {
     return listGetLimiter(req, res, next);
