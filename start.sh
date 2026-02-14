@@ -1,4 +1,6 @@
 #!/bin/sh
+set -e  # Exit on error
+set -u  # Exit on undefined variable
 
 # Start backend in background
 cd /app/server && node index.js &

@@ -8,10 +8,10 @@ import groupsRouter from './routes/groups.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Rate limiting
+// Rate limiting - configurable via env
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // limit each IP to 1000 requests per windowMs
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // Default 100 requests per window
   message: 'Too many requests from this IP, please try again later.'
 });
 

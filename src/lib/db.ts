@@ -32,14 +32,6 @@ export async function getList(id: string): Promise<ShoppingList | undefined> {
   }
 }
 
-export async function saveList(list: ShoppingList): Promise<void> {
-  await api.updateList(list.id, {
-    name: list.name,
-    emoji: list.emoji,
-    color: list.color,
-  });
-}
-
 export async function deleteList(id: string): Promise<void> {
   await api.deleteList(id);
 }

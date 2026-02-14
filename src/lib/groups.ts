@@ -24,13 +24,6 @@ export async function getGroup(id: string): Promise<Group | undefined> {
   }
 }
 
-export async function saveGroup(group: Group): Promise<void> {
-  await api.updateGroup(group.id, {
-    name: group.name,
-    emoji: group.emoji,
-  });
-}
-
 export async function deleteGroup(id: string): Promise<void> {
   await api.deleteGroup(id);
 }

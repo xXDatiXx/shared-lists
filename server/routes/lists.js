@@ -224,10 +224,13 @@ router.put('/:listId/items/:itemId', authenticateToken, (req, res) => {
       values.push(completed ? 1 : 0);
       
       if (completed) {
-        updates.push('completedBy = ?', 'completedAt = ?');
-        values.push(completedBy || 'Tú', Date.now());
+        updates.push('completedBy = ?');
+        updates.push('completedAt = ?');
+        values.push(completedBy || 'Tú');
+        values.push(Date.now());
       } else {
-        updates.push('completedBy = NULL', 'completedAt = NULL');
+        updates.push('completedBy = NULL');
+        updates.push('completedAt = NULL');
       }
     }
 
