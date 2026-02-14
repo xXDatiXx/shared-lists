@@ -8,19 +8,15 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine AS production
+# Production stage with nginx
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy built files
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Install serve globally
-RUN npm install -g serve
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built files from builder stage
-COPY --from=builder /app/dist ./dist
+EXPOSE 80
 
-# Expose port
-EXPOSE 3000
-
-# Serve the app with proper SPA configuration
-CMD ["serve", "-s", "dist", "-l", "3000", "--no-clipboard"]
+CMD ["nginx", "-g", "daemon off;"]

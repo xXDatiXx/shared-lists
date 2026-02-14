@@ -6,11 +6,7 @@ services:
     container_name: listas-compartidas
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
-    environment:
-      - PORT=${PORT:-3000}
-    volumes:
-      - app-data:/app/data
+      - "3000:80"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
