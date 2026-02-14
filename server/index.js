@@ -15,6 +15,19 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 
+// Rate limiter específico para consultas de listas individuales
+const listGetLimiter = rateLimit({
+  windowMs: 1000, // 1 segundo
+  max: 10, // máximo 10 requests por segundo
+  message: { error: 'Demasiadas peticiones, por favor espera' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.warn(`Rate limit exceeded for ${req.ip} on ${req.path}`);
+    res.status(429).json({ error: 'Demasiadas peticiones, por favor espera' });
+  }
+});
+
 // Middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
@@ -30,6 +43,14 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     console.log(`${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
   });
+  next();
+});
+
+// Aplicar rate limiting específico a GET de listas individuales
+app.use('/api/lists/:id', (req, res, next) => {
+  if (req.method === 'GET' && req.params.id && !req.path.includes('/items') && !req.path.includes('/share')) {
+    return listGetLimiter(req, res, next);
+  }
   next();
 });
 

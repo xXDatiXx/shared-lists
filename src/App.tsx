@@ -12,7 +12,15 @@ import AdminPage from "./pages/AdminPage";
 import GroupsPage from "./pages/GroupsPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5000, // Data stays fresh for 5 seconds
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      retry: 1, // Only retry failed requests once
+    },
+  },
+});
 
 function AppRoutes() {
   useSystemTheme();
