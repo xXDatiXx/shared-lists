@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci --only=production=false
 
 COPY . .
 RUN npm run build
@@ -21,4 +21,4 @@ ENV PORT=3000
 
 EXPOSE ${PORT}
 
-CMD ["sh", "-c", "serve -s dist -l ${PORT} --no-clipboard"]
+CMD ["sh", "-c", "serve -s dist -p ${PORT} -n"]
