@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuth } from '@/hooks/useAuth';
-import { getAllUsers } from '@/lib/auth';
+import { getAllUsers, type User } from '@/lib/auth';
 import { useLists } from '@/hooks/useLists';
 import GlassCard from '@/components/GlassCard';
 import { ArrowLeft, Plus, Users, Trash2, UserPlus, ListPlus } from 'lucide-react';
@@ -23,7 +23,11 @@ export default function GroupsPage() {
   const [emoji, setEmoji] = useState('👨‍👩‍👧‍👦');
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-  const allUsers = getAllUsers().filter(u => !u.isAdmin);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    getAllUsers().then(users => setAllUsers(users.filter(u => !u.isAdmin)));
+  }, []);
 
   const handleCreate = async () => {
     if (!name.trim() || !user) return;
@@ -53,7 +57,7 @@ export default function GroupsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="glass-strong sticky top-0 z-10 px-4 pt-safe">
         <div className="flex items-center justify-between h-14 max-w-lg mx-auto">
           <button onClick={() => navigate('/')} className="touch-target flex items-center justify-center">

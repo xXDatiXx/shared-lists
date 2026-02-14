@@ -15,7 +15,7 @@ interface IndexProps {
 
 export default function Index({ user, isAdmin, onLogout }: IndexProps) {
   const navigate = useNavigate();
-  const { lists, loading, createList } = useLists();
+  const { lists, loading, createList } = useLists(user.id, isAdmin);
   const [online, setOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function Index({ user, isAdmin, onLogout }: IndexProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="glass-strong sticky top-0 z-10 px-4 pt-safe">
         <div className="flex items-center justify-between h-16 max-w-lg mx-auto">
@@ -58,7 +58,6 @@ export default function Index({ user, isAdmin, onLogout }: IndexProps) {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pb-28 pt-4">
-        {/* Sync banner */}
         {!online && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}

@@ -16,6 +16,8 @@ export interface ShoppingList {
   emoji: string;
   color: string;
   items: ListItem[];
+  createdBy: string;
+  sharedWith: string[];
   createdAt: number;
   updatedAt: number;
 }

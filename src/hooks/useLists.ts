@@ -13,7 +13,7 @@ const LIST_COLORS = [
 
 const LIST_EMOJIS = ['🛒', '📋', '💡', '🎯', '📦', '✨', '🏠', '🍳'];
 
-export function useLists() {
+export function useLists(userId?: string, isAdmin?: boolean) {
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +29,11 @@ export function useLists() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Filter lists based on access
+  const accessibleLists = userId && !isAdmin
+    ? lists.filter(l => l.createdBy === userId || (l.sharedWith && l.sharedWith.includes(userId)))
+    : lists;
 
   const createList = useCallback(async (name: string, emoji?: string) => {
     const selectedEmoji = emoji || LIST_EMOJIS[Math.floor(Math.random() * LIST_EMOJIS.length)];
@@ -68,5 +73,15 @@ export function useLists() {
     await refresh();
   }, [refresh]);
 
-  return { lists, loading, createList, addItem, toggleItem, removeItem, removeList };
+  const shareList = useCallback(async (listId: string, targetUserId: string) => {
+    await api.shareList(listId, targetUserId);
+    await refresh();
+  }, [refresh]);
+
+  const unshareList = useCallback(async (listId: string, targetUserId: string) => {
+    await api.unshareList(listId, targetUserId);
+    await refresh();
+  }, [refresh]);
+
+  return { lists: accessibleLists, allLists: lists, loading, createList, addItem, toggleItem, removeItem, removeList, shareList, unshareList };
 }
