@@ -108,10 +108,12 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(to bottom, hsla(225, 25%, 8%, 0.7), hsla(225, 25%, 8%, 0.85)), url('/images/jellyfish.jpg') center/cover no-repeat fixed;
+    background-color: hsl(var(--background));
   }
 }
 

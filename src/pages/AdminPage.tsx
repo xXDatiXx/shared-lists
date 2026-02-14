@@ -66,7 +66,7 @@ export default function AdminPage() {
   const nonAdminUsers = users.filter(u => !u.isAdmin);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="glass-strong sticky top-0 z-10 px-4 pt-safe">
         <div className="flex items-center justify-between h-14 max-w-lg mx-auto">
           <button onClick={() => navigate('/')} className="touch-target flex items-center justify-center">

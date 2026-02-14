@@ -35,8 +35,18 @@ function initializeDatabase() {
       name TEXT NOT NULL,
       emoji TEXT NOT NULL,
       color TEXT NOT NULL,
+      createdBy TEXT,
       createdAt INTEGER NOT NULL,
-      updatedAt INTEGER NOT NULL
+      updatedAt INTEGER NOT NULL,
+      FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS list_shares (
+      listId TEXT NOT NULL,
+      userId TEXT NOT NULL,
+      PRIMARY KEY (listId, userId),
+      FOREIGN KEY (listId) REFERENCES lists(id) ON DELETE CASCADE,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS items (
@@ -82,7 +92,16 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_group_members_userId ON group_members(userId);
     CREATE INDEX IF NOT EXISTS idx_group_lists_groupId ON group_lists(groupId);
     CREATE INDEX IF NOT EXISTS idx_group_lists_listId ON group_lists(listId);
+    CREATE INDEX IF NOT EXISTS idx_list_shares_listId ON list_shares(listId);
+    CREATE INDEX IF NOT EXISTS idx_list_shares_userId ON list_shares(userId);
   `);
+
+  // Add createdBy column if missing (migration for existing DBs)
+  try {
+    db.prepare("SELECT createdBy FROM lists LIMIT 1").get();
+  } catch {
+    db.exec("ALTER TABLE lists ADD COLUMN createdBy TEXT REFERENCES users(id) ON DELETE SET NULL");
+  }
 
   console.log('Database initialized successfully');
 }

@@ -132,6 +132,24 @@ export async function createList(name: string, emoji: string, color: string): Pr
   return handleResponse<ShoppingList>(response);
 }
 
+// Share/unshare list
+export async function shareList(listId: string, userId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/lists/${listId}/share`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ userId }),
+  });
+  return handleResponse<void>(response);
+}
+
+export async function unshareList(listId: string, userId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/lists/${listId}/share/${userId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return handleResponse<void>(response);
+}
+
 export async function updateList(id: string, updates: { name?: string; emoji?: string; color?: string }): Promise<ShoppingList> {
   const response = await fetch(`${API_URL}/lists/${id}`, {
     method: 'PUT',
