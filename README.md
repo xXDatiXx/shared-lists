@@ -98,7 +98,8 @@ Client (React) → API (Express) → Database (SQLite)
 
 7. **Access the application:**
    - Open your browser to `http://localhost:5173`
-   - Login with the admin token: `admin-setup-token`
+   - Check the backend server logs for the auto-generated admin token
+   - Login using the displayed admin token or the one you set in `.env`
 
 ### Option 2: Docker Deployment (Recommended for Production)
 
@@ -112,7 +113,9 @@ The application will be available at:
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:3001`
 
-**First time login:** Use the admin token `admin-setup-token`
+**First time login:** 
+- Check the container logs for the auto-generated admin token: `docker-compose logs app`
+- Or set a custom token in `docker-compose.yml` environment variables before starting
 
 ### Persistent Data
 
@@ -254,10 +257,73 @@ Create a `.env` file in the root directory:
 # Backend API URL (for development)
 VITE_API_URL=http://localhost:3001/api
 
+# Admin Configuration
+# ADMIN_TOKEN: Secure token for admin user authentication
+# If not set, a random secure token will be auto-generated on first startup
+# Recommended: Use a strong random token of at least 32 characters
+# Example: Use `openssl rand -hex 32` to generate a secure token
+ADMIN_TOKEN=your-secure-admin-token-here
+
 # Backend configuration (server/.env if needed)
 PORT=3001
 NODE_ENV=production
 RATE_LIMIT_MAX=100
+```
+
+### 🔐 Admin Token Security
+
+**IMPORTANT:** The admin token is critical for system security. Follow these best practices:
+
+#### Setting Up Your Admin Token
+
+1. **Generate a secure token** (recommended):
+   ```bash
+   # Using OpenSSL
+   openssl rand -hex 32
+   
+   # Using Node.js
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+2. **Set the token in your environment**:
+   ```bash
+   # Add to your .env file
+   echo "ADMIN_TOKEN=$(openssl rand -hex 32)" >> .env
+   ```
+
+3. **For Docker deployments**, set it in `docker-compose.yml`:
+   ```yaml
+   environment:
+     - ADMIN_TOKEN=your-secure-token-here
+   ```
+
+#### Security Best Practices
+
+- ⚠️ **Never use the default token** (`admin-setup-token`) in production
+- 🔒 Use tokens with **at least 32 characters** (64 hexadecimal characters recommended)
+- 🚫 **Never commit** your `.env` file or expose tokens in code repositories
+- 🔄 **Rotate tokens regularly** in production environments
+- 📝 Store tokens securely using secrets management systems for production
+- 🔑 If no `ADMIN_TOKEN` is set, the server will auto-generate one on first startup and display it in the logs - **save it immediately**
+
+#### First Time Setup
+
+When you start the server for the first time without an `ADMIN_TOKEN` environment variable:
+
+1. The server will generate a secure random token automatically
+2. The token will be displayed prominently in the server logs
+3. **Save this token immediately** - you'll need it to access the admin panel
+4. Consider setting it as an environment variable for persistence
+
+Example output:
+```
+================================================================================
+ADMIN USER INITIALIZED
+================================================================================
+Admin token (auto-generated): a1b2c3d4e5f6...
+IMPORTANT: Save this token securely!
+To use a custom token, set the ADMIN_TOKEN environment variable.
+================================================================================
 ```
 
 ### Database
@@ -315,11 +381,14 @@ docker-compose up -d
 
 ## 🔒 Security
 
-- Token-based authentication for all API endpoints
-- Rate limiting to prevent abuse (configurable)
-- CORS configuration for secure cross-origin requests
-- SQL injection protection via parameterized queries
-- No passwords stored (token-only authentication)
+- **Secure admin authentication** - Configurable admin token via environment variables
+- **Auto-generated secure tokens** - Cryptographically secure tokens (64 hex characters) when not manually configured
+- **Token-based authentication** for all API endpoints
+- **Rate limiting** to prevent abuse (configurable)
+- **CORS configuration** for secure cross-origin requests
+- **SQL injection protection** via parameterized queries
+- **No passwords stored** (token-only authentication)
+- **Token length validation** - Warnings for tokens shorter than 32 characters
 
 ## 🚀 Deployment
 

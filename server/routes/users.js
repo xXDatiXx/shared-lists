@@ -1,5 +1,5 @@
 import express from 'express';
-import { db, generateId } from '../database.js';
+import { db, generateId, generateSecureToken } from '../database.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -105,7 +105,6 @@ router.delete('/:id', authenticateToken, requireAdmin, (req, res) => {
 // Initialize admin (public endpoint for setup)
 router.post('/init-admin', (req, res) => {
   try {
-    const adminToken = 'admin-setup-token';
     const existingAdmin = db.prepare('SELECT * FROM users WHERE isAdmin = 1').get();
     
     if (existingAdmin) {
@@ -113,6 +112,15 @@ router.post('/init-admin', (req, res) => {
         ...existingAdmin,
         isAdmin: Boolean(existingAdmin.isAdmin)
       });
+    }
+
+    // Read admin token from environment or generate a secure one
+    let adminToken = process.env.ADMIN_TOKEN;
+    
+    if (!adminToken) {
+      adminToken = generateSecureToken(32);
+    } else if (adminToken.length < 32) {
+      console.warn('WARNING: ADMIN_TOKEN is shorter than recommended 32 characters. Consider using a longer token for better security.');
     }
 
     const id = generateId();

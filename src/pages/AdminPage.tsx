@@ -54,13 +54,58 @@ export default function AdminPage() {
     }
   };
 
-  const copyToken = (user: User) => {
+  // Fallback clipboard copy function for when navigator.clipboard API fails
+  const fallbackCopyToClipboard = (text: string): boolean => {
+    try {
+      // Create a temporary textarea element
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-999999px';
+      textarea.style.top = '-999999px';
+      document.body.appendChild(textarea);
+      
+      // Select and copy the text
+      textarea.focus();
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      return successful;
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      return false;
+    }
+  };
+
+  const copyToken = async (user: User) => {
     const url = `${window.location.origin}?token=${user.token}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(user.id);
     haptic.light();
-    toast.success('URL de acceso copiada');
-    setTimeout(() => setCopiedId(null), 2000);
+    
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+        setCopiedId(user.id);
+        toast.success('URL de acceso copiada', { duration: 3000 });
+        setTimeout(() => setCopiedId(null), 3000);
+      } else {
+        // Fallback to execCommand for older browsers or non-HTTPS contexts
+        const success = fallbackCopyToClipboard(url);
+        if (success) {
+          setCopiedId(user.id);
+          toast.success('URL de acceso copiada', { duration: 3000 });
+          setTimeout(() => setCopiedId(null), 3000);
+        } else {
+          throw new Error('Clipboard copy failed');
+        }
+      }
+    } catch (error) {
+      console.error('Copy failed:', error);
+      toast.error('No se pudo copiar la URL. Por favor, copia manualmente: ' + user.token, {
+        duration: 5000
+      });
+    }
   };
 
   const nonAdminUsers = users.filter(u => !u.isAdmin);
@@ -151,11 +196,16 @@ export default function AdminPage() {
                     <p className="font-medium text-foreground">{user.name}</p>
                     <p className="text-xs text-muted-foreground font-mono">{user.token}</p>
                   </div>
-                  <button onClick={() => copyToken(user)} className="touch-target flex items-center justify-center">
+                  <button 
+                    onClick={() => copyToken(user)} 
+                    className={`touch-target flex items-center justify-center transition-all duration-300 ${
+                      copiedId === user.id ? 'scale-110' : ''
+                    }`}
+                  >
                     {copiedId === user.id ? (
-                      <Check className="w-4 h-4 text-success" />
+                      <Check className="w-5 h-5 text-success animate-in zoom-in duration-300" />
                     ) : (
-                      <Copy className="w-4 h-4 text-muted-foreground" />
+                      <Copy className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                     )}
                   </button>
                   <button onClick={() => handleDelete(user.id)} className="touch-target flex items-center justify-center">
