@@ -1,5 +1,21 @@
 // API client for backend communication
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// In production (Docker), use relative path. In development, use env var or localhost
+const getApiUrl = () => {
+  // If VITE_API_URL is set, use it (development)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // In production, use the same host but different port
+  // If we're in Docker, both services are exposed on different ports
+  const host = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // If accessing via port 3000 (frontend), backend is on port 3001
+  return `${protocol}//${host}:3001/api`;
+};
+
+const API_URL = getApiUrl();
 
 let authToken: string | null = null;
 
