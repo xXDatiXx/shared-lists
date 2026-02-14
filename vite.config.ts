@@ -1,8 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+
+let tagger: any;
+try {
+  tagger = await import("lovable-tagger").then(m => m.componentTagger);
+} catch {
+  tagger = null;
+}
 
 export default defineConfig(({ mode }) => ({
   server: {
@@ -14,7 +20,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
+    mode === "development" && tagger && tagger(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png"],
