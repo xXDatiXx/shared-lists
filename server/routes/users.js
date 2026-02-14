@@ -119,8 +119,8 @@ router.post('/init-admin', (req, res) => {
     
     if (!adminToken) {
       adminToken = generateSecureToken(32);
-    } else if (adminToken.length < 32) {
-      console.warn('WARNING: ADMIN_TOKEN is shorter than recommended 32 characters. Consider using a longer token for better security.');
+    } else if (adminToken.length < 64) {
+      console.warn('WARNING: ADMIN_TOKEN is shorter than recommended 64 characters. Consider using a longer token for better security.');
     }
 
     const id = generateId();

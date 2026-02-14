@@ -299,12 +299,12 @@ RATE_LIMIT_MAX=100
 
 #### Security Best Practices
 
-- ⚠️ **Never use the default token** (`admin-setup-token`) in production
-- 🔒 Use tokens with **at least 32 characters** (64 hexadecimal characters recommended)
+- ⚠️ **Never use predictable or hardcoded tokens** in production environments
+- 🔒 Use tokens with **at least 64 hexadecimal characters** (auto-generated tokens are 64 characters)
 - 🚫 **Never commit** your `.env` file or expose tokens in code repositories
 - 🔄 **Rotate tokens regularly** in production environments
 - 📝 Store tokens securely using secrets management systems for production
-- 🔑 If no `ADMIN_TOKEN` is set, the server will auto-generate one on first startup and display it in the logs - **save it immediately**
+- 🔑 If no `ADMIN_TOKEN` is set, the server will auto-generate a cryptographically secure token on first startup and display it in the logs - **save it immediately**
 
 #### First Time Setup
 
