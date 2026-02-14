@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+// Legacy hook for backward compatibility
 export function useSystemTheme() {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -11,3 +12,6 @@ export function useSystemTheme() {
     return () => mq.removeEventListener('change', apply);
   }, []);
 }
+
+// Re-export the new useTheme hook from ThemeContext
+export { useTheme } from '@/contexts/ThemeContext';
