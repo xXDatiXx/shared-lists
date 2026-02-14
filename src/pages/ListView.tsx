@@ -25,7 +25,15 @@ export default function ListView({ user }: ListViewProps) {
 
   useEffect(() => {
     if (!id) return;
-    getList(id).then(l => l && setList(l));
+    
+    // First try to get from the lists cache
+    const cachedList = lists.find(l => l.id === id);
+    if (cachedList) {
+      setList(cachedList);
+    } else {
+      // Fall back to fetching individually if not in cache
+      getList(id).then(l => l && setList(l));
+    }
   }, [id, lists]);
 
   useEffect(() => {

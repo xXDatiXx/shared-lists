@@ -17,6 +17,16 @@ const db = new Database(dbPath);
 
 // Enable WAL mode for better concurrent access
 db.pragma('journal_mode = WAL');
+db.pragma('busy_timeout = 5000'); // 5 seconds timeout
+db.pragma('synchronous = NORMAL'); // Balance between safety and speed
+db.pragma('cache_size = -64000'); // 64MB cache
+db.pragma('temp_store = MEMORY'); // Use memory for temp operations
+
+console.log('Database pragmas:', {
+  journal_mode: db.pragma('journal_mode', { simple: true }),
+  synchronous: db.pragma('synchronous', { simple: true }),
+  busy_timeout: db.pragma('busy_timeout', { simple: true })
+});
 
 // Initialize database schema
 function initializeDatabase() {
@@ -134,5 +144,14 @@ function generateId() {
 // Initialize database on startup
 initializeDatabase();
 initializeAdmin();
+
+// Add process handlers for cleanup
+process.on('exit', () => {
+  console.log('Closing database connection...');
+  db?.close();
+});
+process.on('SIGHUP', () => process.exit(128 + 1));
+process.on('SIGINT', () => process.exit(128 + 2));
+process.on('SIGTERM', () => process.exit(128 + 15));
 
 export { db, generateId };

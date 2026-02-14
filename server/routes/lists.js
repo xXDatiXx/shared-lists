@@ -34,6 +34,9 @@ router.get('/', authenticateToken, (req, res) => {
 router.get('/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] User ${req.user.name} (${req.user.id}) requested list ${id}`);
+    
     const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
     if (!list) return res.status(404).json({ error: 'List not found' });
 
@@ -163,36 +166,49 @@ router.delete('/:id', authenticateToken, (req, res) => {
 
 // Add item to list
 router.post('/:id/items', authenticateToken, (req, res) => {
+  // Transaction for atomic multi-write operation
+  const addItemTransaction = db.transaction((id, itemId, text, addedBy, now) => {
+    const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
+    if (!list) throw new Error('List not found');
+    
+    db.prepare('INSERT INTO items (id, listId, text, completed, addedBy, createdAt) VALUES (?, ?, ?, 0, ?, ?)').run(itemId, id, text, addedBy || 'Tú', now);
+    db.prepare('UPDATE lists SET updatedAt = ? WHERE id = ?').run(now, id);
+    
+    return db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
+  });
+
   try {
     const { id } = req.params;
     const { text, addedBy } = req.body;
     if (!text) return res.status(400).json({ error: 'Text is required' });
 
-    const list = db.prepare('SELECT * FROM lists WHERE id = ?').get(id);
-    if (!list) return res.status(404).json({ error: 'List not found' });
-
     const itemId = generateId();
     const now = Date.now();
 
-    db.prepare('INSERT INTO items (id, listId, text, completed, addedBy, createdAt) VALUES (?, ?, ?, 0, ?, ?)').run(itemId, id, text, addedBy || 'Tú', now);
-    db.prepare('UPDATE lists SET updatedAt = ? WHERE id = ?').run(now, id);
-
-    const item = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
+    const item = addItemTransaction(id, itemId, text, addedBy, now);
     res.status(201).json({ ...item, completed: Boolean(item.completed) });
   } catch (error) {
     console.error('Add item error:', error);
-    res.status(500).json({ error: 'Failed to add item' });
+    res.status(500).json({ error: error.message || 'Failed to add item' });
   }
 });
 
 // Update item
 router.put('/:listId/items/:itemId', authenticateToken, (req, res) => {
+  // Transaction for atomic multi-write operation
+  const updateItemTransaction = db.transaction((listId, itemId, updates, values) => {
+    const item = db.prepare('SELECT * FROM items WHERE id = ? AND listId = ?').get(itemId, listId);
+    if (!item) throw new Error('Item not found');
+
+    db.prepare(`UPDATE items SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    db.prepare('UPDATE lists SET updatedAt = ? WHERE id = ?').run(Date.now(), listId);
+    
+    return db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
+  });
+
   try {
     const { listId, itemId } = req.params;
     const { text, completed, completedBy } = req.body;
-
-    const item = db.prepare('SELECT * FROM items WHERE id = ? AND listId = ?').get(itemId, listId);
-    if (!item) return res.status(404).json({ error: 'Item not found' });
 
     const updates = [];
     const values = [];
@@ -215,28 +231,34 @@ router.put('/:listId/items/:itemId', authenticateToken, (req, res) => {
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
     values.push(itemId);
 
-    db.prepare(`UPDATE items SET ${updates.join(', ')} WHERE id = ?`).run(...values);
-    db.prepare('UPDATE lists SET updatedAt = ? WHERE id = ?').run(Date.now(), listId);
-
-    const updatedItem = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
+    const updatedItem = updateItemTransaction(listId, itemId, updates, values);
     res.json({ ...updatedItem, completed: Boolean(updatedItem.completed) });
   } catch (error) {
     console.error('Update item error:', error);
-    res.status(500).json({ error: 'Failed to update item' });
+    res.status(500).json({ error: error.message || 'Failed to update item' });
   }
 });
 
 // Delete item
 router.delete('/:listId/items/:itemId', authenticateToken, (req, res) => {
+  // Transaction for atomic multi-write operation
+  const deleteItemTransaction = db.transaction((listId, itemId) => {
+    const result = db.prepare('DELETE FROM items WHERE id = ? AND listId = ?').run(itemId, listId);
+    if (result.changes === 0) throw new Error('Item not found');
+    db.prepare('UPDATE lists SET updatedAt = ? WHERE id = ?').run(Date.now(), listId);
+  });
+
   try {
     const { listId, itemId } = req.params;
-    const result = db.prepare('DELETE FROM items WHERE id = ? AND listId = ?').run(itemId, listId);
-    if (result.changes === 0) return res.status(404).json({ error: 'Item not found' });
-    db.prepare('UPDATE lists SET updatedAt = ? WHERE id = ?').run(Date.now(), listId);
+    deleteItemTransaction(listId, itemId);
     res.status(204).send();
   } catch (error) {
     console.error('Delete item error:', error);
-    res.status(500).json({ error: 'Failed to delete item' });
+    if (error.message === 'Item not found') {
+      res.status(404).json({ error: 'Item not found' });
+    } else {
+      res.status(500).json({ error: 'Failed to delete item' });
+    }
   }
 });
 
