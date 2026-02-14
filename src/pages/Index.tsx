@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLists } from '@/hooks/useLists';
 import ListCard from '@/components/ListCard';
 import CreateListSheet from '@/components/CreateListSheet';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 import { Users, Settings, LogOut, Wifi, WifiOff } from 'lucide-react';
 import { type User } from '@/lib/auth';
@@ -42,6 +43,7 @@ export default function Index({ user, isAdmin, onLogout }: IndexProps) {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <button onClick={() => navigate('/groups')} className="touch-target flex items-center justify-center">
               <Users className="w-5 h-5 text-muted-foreground" />
             </button>
