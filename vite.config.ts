@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "apple-touch-icon.png"],
+      includeAssets: ["logo.svg", "apple-touch-icon.png", "favicon.ico"],
       manifest: {
         name: "Listas Compartidas",
         short_name: "Listas",

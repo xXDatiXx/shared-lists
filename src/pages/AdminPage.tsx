@@ -72,7 +72,17 @@ export default function AdminPage() {
           <button onClick={() => navigate('/')} className="touch-target flex items-center justify-center">
             <ArrowLeft className="w-6 h-6 text-primary" />
           </button>
-          <h1 className="font-semibold text-foreground text-lg">👑 Admin</h1>
+          <h1 className="font-semibold text-foreground text-lg flex items-center gap-2 justify-center">
+            <img 
+              src="/logo.svg" 
+              alt="Vault-Tec Logo" 
+              className="w-8 h-8"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <span>Admin</span>
+          </h1>
           <button
             onClick={() => setShowCreate(!showCreate)}
             className="touch-target flex items-center justify-center"
