@@ -1,12 +1,12 @@
 #!/bin/sh
-set -e  # Exit on error
-set -u  # Exit on undefined variable
+set -e
+set -u
 
-# Start backend in background
-cd /app/server && node index.js &
+# Start backend on port 3001 explicitly
+cd /app/server && PORT=3001 node index.js &
 
-# Wait a moment for backend to start
+# Wait for backend
 sleep 2
 
-# Start frontend
+# Start frontend on port 3000
 serve -s /app/dist -l 3000 --no-clipboard
