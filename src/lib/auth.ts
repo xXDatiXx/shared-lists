@@ -1,4 +1,4 @@
-import { generateId } from './db';
+import * as api from './api';
 
 export interface User {
   id: string;
@@ -9,85 +9,60 @@ export interface User {
   createdAt: number;
 }
 
-const USERS_KEY = 'shared-lists-users';
 const CURRENT_USER_KEY = 'shared-lists-current-user';
-const ADMIN_TOKEN = 'admin-setup-token';
-
-function getStoredUsers(): User[] {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-  } catch { return []; }
-}
-
-function setStoredUsers(users: User[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
 
 export function getCurrentUser(): User | null {
   try {
     const data = localStorage.getItem(CURRENT_USER_KEY);
-    return data ? JSON.parse(data) : null;
-  } catch { return null; }
+    if (data) {
+      const user = JSON.parse(data);
+      // Restore auth token when getting current user
+      api.setAuthToken(user.token);
+      return user;
+    }
+    return null;
+  } catch { 
+    return null; 
+  }
 }
 
 export function setCurrentUser(user: User | null) {
   if (user) {
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    api.setAuthToken(user.token);
   } else {
     localStorage.removeItem(CURRENT_USER_KEY);
+    api.setAuthToken(null);
   }
 }
 
-export function loginWithToken(token: string): User | null {
-  const users = getStoredUsers();
-  const user = users.find(u => u.token === token);
-  if (user) {
+export async function loginWithToken(token: string): Promise<User | null> {
+  try {
+    const user = await api.loginWithToken(token);
     setCurrentUser(user);
     return user;
+  } catch (error) {
+    console.error('Login error:', error);
+    return null;
   }
-  return null;
 }
 
-export function initializeAdmin(): User {
-  const users = getStoredUsers();
-  let admin = users.find(u => u.isAdmin);
-  if (!admin) {
-    admin = {
-      id: generateId(),
-      name: 'Admin',
-      token: ADMIN_TOKEN,
-      avatar: '👑',
-      isAdmin: true,
-      createdAt: Date.now(),
-    };
-    users.push(admin);
-    setStoredUsers(users);
-  }
+export async function initializeAdmin(): Promise<User> {
+  const admin = await api.initializeAdmin();
   return admin;
 }
 
-export function createUser(name: string, avatar: string): User {
-  const users = getStoredUsers();
-  const user: User = {
-    id: generateId(),
-    name,
-    token: generateId().slice(0, 8),
-    avatar,
-    isAdmin: false,
-    createdAt: Date.now(),
-  };
-  users.push(user);
-  setStoredUsers(users);
+export async function createUser(name: string, avatar: string): Promise<User> {
+  const user = await api.createUser(name, avatar);
   return user;
 }
 
-export function getAllUsers(): User[] {
-  return getStoredUsers();
+export async function getAllUsers(): Promise<User[]> {
+  return api.getAllUsers();
 }
 
-export function deleteUser(id: string) {
-  const users = getStoredUsers().filter(u => u.id !== id);
-  setStoredUsers(users);
+export async function deleteUser(id: string): Promise<void> {
+  await api.deleteUser(id);
 }
 
 export function logout() {

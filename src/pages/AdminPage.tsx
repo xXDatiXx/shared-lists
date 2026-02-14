@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createUser, getAllUsers, deleteUser, type User } from '@/lib/auth';
 import { ArrowLeft, Plus, Trash2, Copy, Check } from 'lucide-react';
@@ -12,28 +12,46 @@ const AVATARS = ['😊', '🦊', '🐱', '🐶', '🦄', '🐼', '🐸', '🦁',
 export default function AdminPage() {
   const navigate = useNavigate();
   const haptic = useHaptic();
-  const [users, setUsers] = useState<User[]>(getAllUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState('😊');
   const [showCreate, setShowCreate] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCreate = () => {
+  useEffect(() => {
+    async function loadUsers() {
+      const allUsers = await getAllUsers();
+      setUsers(allUsers);
+    }
+    loadUsers();
+  }, []);
+
+  const handleCreate = async () => {
     if (!name.trim()) return;
     haptic.medium();
-    const user = createUser(name.trim(), avatar);
-    setUsers(getAllUsers());
-    setName('');
-    setAvatar('😊');
-    setShowCreate(false);
-    toast.success(`Usuario "${user.name}" creado. Token: ${user.token}`);
+    try {
+      const user = await createUser(name.trim(), avatar);
+      const allUsers = await getAllUsers();
+      setUsers(allUsers);
+      setName('');
+      setAvatar('😊');
+      setShowCreate(false);
+      toast.success(`Usuario "${user.name}" creado. Token: ${user.token}`);
+    } catch (error) {
+      toast.error('Error al crear usuario');
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     haptic.light();
-    deleteUser(id);
-    setUsers(getAllUsers());
-    toast.success('Usuario eliminado');
+    try {
+      await deleteUser(id);
+      const allUsers = await getAllUsers();
+      setUsers(allUsers);
+      toast.success('Usuario eliminado');
+    } catch (error) {
+      toast.error('Error al eliminar usuario');
+    }
   };
 
   const copyToken = (user: User) => {
