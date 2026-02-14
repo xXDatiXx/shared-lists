@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { mkdirSync, existsSync } from 'fs';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -118,17 +119,38 @@ function initializeDatabase() {
 
 // Initialize admin user if it doesn't exist
 function initializeAdmin() {
-  const adminToken = 'admin-setup-token';
   const existingAdmin = db.prepare('SELECT * FROM users WHERE isAdmin = 1').get();
   
   if (!existingAdmin) {
+    // Read admin token from environment or generate a secure one
+    let adminToken = process.env.ADMIN_TOKEN;
+    let wasGenerated = false;
+    
+    if (!adminToken) {
+      adminToken = generateSecureToken(32);
+      wasGenerated = true;
+    } else if (adminToken.length < 64) {
+      console.warn('WARNING: ADMIN_TOKEN is shorter than recommended 64 characters. Consider using a longer token for better security.');
+    }
+    
     const adminId = generateId();
     db.prepare(`
       INSERT INTO users (id, name, token, avatar, isAdmin, createdAt)
       VALUES (?, ?, ?, ?, 1, ?)
     `).run(adminId, 'Admin', adminToken, '👑', Date.now());
     
-    console.log('Admin user initialized with token:', adminToken);
+    if (wasGenerated) {
+      console.log('='.repeat(80));
+      console.log('ADMIN USER INITIALIZED');
+      console.log('='.repeat(80));
+      console.log('Admin token (auto-generated):', adminToken);
+      console.log('');
+      console.log('IMPORTANT: Save this token securely!');
+      console.log('To use a custom token, set the ADMIN_TOKEN environment variable.');
+      console.log('='.repeat(80));
+    } else {
+      console.log('Admin user initialized with token from ADMIN_TOKEN environment variable');
+    }
   }
 }
 
@@ -139,6 +161,11 @@ function generateId() {
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
+}
+
+// Generate secure random token
+function generateSecureToken(length = 32) {
+  return crypto.randomBytes(length).toString('hex');
 }
 
 // Initialize database on startup
@@ -154,4 +181,4 @@ process.on('SIGHUP', () => process.exit(128 + 1));
 process.on('SIGINT', () => process.exit(128 + 2));
 process.on('SIGTERM', () => process.exit(128 + 15));
 
-export { db, generateId };
+export { db, generateId, generateSecureToken };
