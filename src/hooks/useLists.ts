@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getAllLists, saveList, deleteList, generateId, type ShoppingList, type ListItem } from '@/lib/db';
+import { getAllLists, deleteList, generateId, type ShoppingList, type ListItem } from '@/lib/db';
+import * as api from '@/lib/api';
 
 const LIST_COLORS = [
   'hsl(211, 100%, 50%)',
@@ -17,63 +18,48 @@ export function useLists() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const data = await getAllLists();
-    setLists(data);
-    setLoading(false);
+    try {
+      const data = await getAllLists();
+      setLists(data);
+    } catch (error) {
+      console.error('Failed to fetch lists:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const createList = useCallback(async (name: string, emoji?: string) => {
-    const list: ShoppingList = {
-      id: generateId(),
-      name,
-      emoji: emoji || LIST_EMOJIS[Math.floor(Math.random() * LIST_EMOJIS.length)],
-      color: LIST_COLORS[Math.floor(Math.random() * LIST_COLORS.length)],
-      items: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    await saveList(list);
+    const selectedEmoji = emoji || LIST_EMOJIS[Math.floor(Math.random() * LIST_EMOJIS.length)];
+    const color = LIST_COLORS[Math.floor(Math.random() * LIST_COLORS.length)];
+    
+    const list = await api.createList(name, selectedEmoji, color);
     await refresh();
     return list;
   }, [refresh]);
 
   const addItem = useCallback(async (listId: string, text: string, addedBy = 'Tú') => {
-    const data = await getAllLists();
-    const list = data.find(l => l.id === listId);
-    if (!list) return;
-    const item: ListItem = {
-      id: generateId(),
-      text,
-      completed: false,
-      addedBy,
-      createdAt: Date.now(),
-    };
-    list.items.push(item);
-    await saveList(list);
+    await api.addItemToList(listId, text, addedBy);
     await refresh();
   }, [refresh]);
 
   const toggleItem = useCallback(async (listId: string, itemId: string, completedBy = 'Tú') => {
-    const data = await getAllLists();
-    const list = data.find(l => l.id === listId);
+    const list = lists.find(l => l.id === listId);
     if (!list) return;
+    
     const item = list.items.find(i => i.id === itemId);
     if (!item) return;
-    item.completed = !item.completed;
-    item.completedBy = item.completed ? completedBy : undefined;
-    item.completedAt = item.completed ? Date.now() : undefined;
-    await saveList(list);
+    
+    await api.updateItem(listId, itemId, {
+      completed: !item.completed,
+      completedBy: !item.completed ? completedBy : undefined,
+    });
     await refresh();
-  }, [refresh]);
+  }, [lists, refresh]);
 
   const removeItem = useCallback(async (listId: string, itemId: string) => {
-    const data = await getAllLists();
-    const list = data.find(l => l.id === listId);
-    if (!list) return;
-    list.items = list.items.filter(i => i.id !== itemId);
-    await saveList(list);
+    await api.deleteItem(listId, itemId);
     await refresh();
   }, [refresh]);
 

@@ -4,19 +4,31 @@ import { motion } from 'framer-motion';
 import GlassCard from '@/components/GlassCard';
 
 interface LoginPageProps {
-  onLogin: (token: string) => boolean;
+  onLogin: (token: string) => Promise<boolean>;
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
   const [token, setToken] = useState('');
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    if (!token.trim()) return;
-    const success = onLogin(token.trim());
-    if (!success) {
+  const handleSubmit = async () => {
+    if (!token.trim() || loading) return;
+    
+    setLoading(true);
+    setError(false);
+    
+    try {
+      const success = await onLogin(token.trim());
+      if (!success) {
+        setError(true);
+        setTimeout(() => setError(false), 2000);
+      }
+    } catch (err) {
       setError(true);
       setTimeout(() => setError(false), 2000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,7 +54,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
               placeholder="Código de acceso..."
               autoFocus
-              className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary transition-all text-lg"
+              disabled={loading}
+              className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary transition-all text-lg disabled:opacity-50"
             />
           </div>
 
@@ -58,10 +71,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
           <button
             onClick={handleSubmit}
-            disabled={!token.trim()}
+            disabled={!token.trim() || loading}
             className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-lg disabled:opacity-40 active:scale-[0.98] transition-all touch-target"
           >
-            Entrar
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </GlassCard>
 
