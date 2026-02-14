@@ -11,14 +11,16 @@ RUN npm run build
 # Production stage
 FROM node:20-alpine AS production
 
-RUN npm install -g serve
-
 WORKDIR /app
 
+# Install serve globally
+RUN npm install -g serve
+
+# Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
-ENV PORT=3000
+# Expose port
+EXPOSE 3000
 
-EXPOSE ${PORT}
-
-CMD ["sh", "-c", "serve -s dist -l ${PORT}"]
+# Serve the app with proper SPA configuration
+CMD ["serve", "-s", "dist", "-l", "3000", "--no-clipboard"]
